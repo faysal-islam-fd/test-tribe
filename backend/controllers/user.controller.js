@@ -1,5 +1,6 @@
 import { User } from "../models/user.model.js";
 import bcrypt from "bcryptjs";
+import { generateTokenAndSetCookie } from "../utils/generateToken.js";
 
 export const signup = async (req, res) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -33,9 +34,13 @@ export const signup = async (req, res) => {
             email,
             password:hashedPassword
         }) 
-        user.save() 
-        res.status(200).json({message:"Account created successfully!",success:true})
+        if(user){
+            generateTokenAndSetCookie(user._id,res)
+            user.save() 
+            res.status(200).json({message:"Account created successfully!",success:true})
 
+        }
+        
     } catch(error){
         return res.status(500).json({message: error?.message || "Internal Server Error", success: false});
     }
@@ -59,6 +64,7 @@ export const longin = async (req, res) => {
         if(!isPasswordMatched){
             return res.status(400).json({message: "Invalid Password", success: false});
         }
+        generateTokenAndSetCookie(isUserExist._id,res)
         res.status(200).json({message:"Login successful!",success:true})
     }
     catch(error){
